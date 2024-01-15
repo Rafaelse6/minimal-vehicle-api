@@ -1,7 +1,18 @@
+using Microsoft.EntityFrameworkCore;
+using Minimal_Vehicle_API.Domain.Entities;
+using Minimal_Vehicle_API.Infrastructure.Db;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container.   
 
+builder.Services.AddDbContext<MySQLContext>(options =>
+{
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("mysql"),
+        new MySqlServerVersion(new Version(8, 0, 31))
+    );
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -20,9 +31,3 @@ app.MapPost("/login", (LoginDTO loginDTO) =>
 app.Run();
 
 
-public class LoginDTO
-{
-    public string Email { get; set; } = default!;
-
-    public string Password { get; set; } = default!;
-}
