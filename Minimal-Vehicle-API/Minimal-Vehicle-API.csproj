@@ -23,7 +23,6 @@
 
 	<ItemGroup>
 		<Folder Include="Domain\DTOs\" />
-		<Folder Include="Domain\Services\" />
 	</ItemGroup>
 
 </Project>
