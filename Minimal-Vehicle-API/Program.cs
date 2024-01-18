@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Minimal_Vehicle_API.Domain.Entities;
 using Minimal_Vehicle_API.Domain.Interfaces;
+using Minimal_Vehicle_API.Domain.ModelViews;
 using Minimal_Vehicle_API.Infrastructure.Db;
 using Minimal_Vehicle_API.Services;
 
@@ -25,7 +26,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.MapGet("/", () => "Hello World");
+app.MapGet("/", () => Results.Json(new Home()));
 
 app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
 {
