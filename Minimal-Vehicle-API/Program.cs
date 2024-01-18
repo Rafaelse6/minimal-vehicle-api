@@ -6,6 +6,7 @@ using Minimal_Vehicle_API.Domain.ModelViews;
 using Minimal_Vehicle_API.Infrastructure.Db;
 using Minimal_Vehicle_API.Services;
 
+#region Builder
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.   
@@ -23,21 +24,30 @@ builder.Services.AddDbContext<MySQLContext>(options =>
     );
 });
 var app = builder.Build();
+#endregion
 
-// Configure the HTTP request pipeline.
-
+#region Home
 app.MapGet("/", () => Results.Json(new Home()));
+#endregion
 
-app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
+#region Admins
+app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
 {
     if (adminService.Login(loginDTO) != null)
         return Results.Ok("Logged");
     else
         return Results.Unauthorized();
 });
+#endregion
 
+#region Vehicles
+
+#endregion
+
+#region App
 app.UseSwagger();
 app.UseSwaggerUI();
+#endregion
 
 app.Run();
 
