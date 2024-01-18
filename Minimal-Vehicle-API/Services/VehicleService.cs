@@ -5,7 +5,7 @@ using Minimal_Vehicle_API.Infrastructure.Db;
 
 namespace Minimal_Vehicle_API.Services
 {
-    public class VehicleService : IVehiceService
+    public class VehicleService : IVehicleService
     {
         private readonly MySQLContext _context;
 

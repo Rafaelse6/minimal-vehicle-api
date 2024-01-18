@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Minimal_Vehicle_API.Domain.DTOs;
 using Minimal_Vehicle_API.Domain.Entities;
 using Minimal_Vehicle_API.Domain.Interfaces;
 using Minimal_Vehicle_API.Domain.ModelViews;
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.   
 
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -41,7 +43,18 @@ app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminS
 #endregion
 
 #region Vehicles
+app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
+{
+    var vehicle = new Vehicle
+    {
+        Name = vehicleDTO.Name,
+        Brand = vehicleDTO.Brand,
+        Year = vehicleDTO.Year,
+    };
+    vehicleService.Add(vehicle);
+    return Results.Created($"/vehicle/{vehicle.Id}", vehicle);
 
+});
 #endregion
 
 #region App

@@ -2,7 +2,7 @@
 
 namespace Minimal_Vehicle_API.Domain.Interfaces
 {
-    public interface IVehiceService
+    public interface IVehicleService
     {
         List<Vehicle> GetVehicles(int page = 1, string? name = null, string? brand = null);    
         Vehicle? FindById(int id);
