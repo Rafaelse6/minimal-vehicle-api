@@ -2,6 +2,7 @@
 using Minimal_Vehicle_API.Domain.Entities;
 using Minimal_Vehicle_API.Domain.Interfaces;
 using Minimal_Vehicle_API.Infrastructure.Db;
+using System.Linq;
 
 namespace Minimal_Vehicle_API.Services
 {
@@ -14,7 +15,7 @@ namespace Minimal_Vehicle_API.Services
             _context = context;
         }
 
-        public List<Vehicle> GetVehicles(int page = 1, string? name = null, string? brand = null)
+        public List<Vehicle> GetVehicles(int? page = 1, string? name = null, string? brand = null)
         {
             var query = _context.Vehicles.AsQueryable();
             if (!string.IsNullOrWhiteSpace(name))
@@ -25,7 +26,9 @@ namespace Minimal_Vehicle_API.Services
 
             int itensPerPage = 10;
 
-            query = query.Skip((page - 1) * itensPerPage).Take(itensPerPage);
+            if (page != null)
+                query = query.Skip((int)(page - 1) * itensPerPage).Take(itensPerPage);
+
 
             return [.. query];
         }
