@@ -33,7 +33,7 @@ namespace Minimal_Vehicle_API.Services
             return [.. query];
         }
 
-        public Vehicle? FindById(int id)
+        public Vehicle? FindById(int? id)
         {
             return _context.Vehicles.Where(v => v.Id == id).FirstOrDefault();
         }
