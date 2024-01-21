@@ -6,6 +6,7 @@ using Minimal_Vehicle_API.Domain.Interfaces;
 using Minimal_Vehicle_API.Domain.ModelViews;
 using Minimal_Vehicle_API.Infrastructure.Db;
 using Minimal_Vehicle_API.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,24 @@ app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminS
 
 #region Vehicles
 
+ErrorsHandling validateDTO(VehicleDTO vehicleDTO)
+{
+    var validation = new ErrorsHandling {
+        Messages = new List<String>()
+    };
+
+    if (string.IsNullOrEmpty(vehicleDTO.Name))
+        validation.Messages.Add("Name can not be empty");
+
+    if (string.IsNullOrEmpty(vehicleDTO.Brand))
+        validation.Messages.Add("Brand can not be empty");
+
+    if (vehicleDTO.Year < 1950)
+        validation.Messages.Add("The year must be from 1950 to actual date");
+
+    return validation;
+}
+
 app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService vehicleService) =>
 {
     var vehicles = vehicleService.GetVehicles(page);
@@ -54,6 +73,11 @@ app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService vehicleService) 
 
 app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
+    var validation = validateDTO(vehicleDTO);
+
+    if (validation.Messages.Count > 0)
+        return Results.BadRequest(validation);
+
     var vehicle = new Vehicle
     {
         Name = vehicleDTO.Name,
@@ -67,6 +91,11 @@ app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehi
 
 app.MapPut("/vehicles/{id}", ([FromRoute] int id, VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
+    var validation = validateDTO(vehicleDTO);
+
+    if (validation.Messages.Count > 0)
+        return Results.BadRequest(validation);
+
     var vehicle = vehicleService.FindById(id);
 
     if (vehicle == null) return Results.NotFound();
