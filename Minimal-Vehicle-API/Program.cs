@@ -9,6 +9,8 @@ using Minimal_Vehicle_API.Domain.Interfaces;
 using Minimal_Vehicle_API.Domain.ModelViews;
 using Minimal_Vehicle_API.Infrastructure.Db;
 using Minimal_Vehicle_API.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 #region Builder
@@ -53,11 +55,33 @@ app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
 #endregion
 
 #region Admins
+string GenerateJwtToken(Admin admin)
+{
+    if (string.IsNullOrEmpty(key)) return string.Empty;
+
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new List<Claim>()
+    {
+        new Claim("Email", admin.Email),
+        new Claim("Profile", admin.Profile)
+    };
+
+    var token = new JwtSecurityToken(
+        claims: claims,
+        expires: DateTime.Now.AddDays(1),
+        signingCredentials: credentials
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
 app.MapGet("/admins", ([FromQuery] int? page, IAdminService adminService) =>
 {
     var adms = new List<AdminModelView>();
     var admins = adminService.FindAll(page);
-    foreach(var adm in admins)
+    foreach (var adm in admins)
     {
         adms.Add(new AdminModelView
         {
@@ -82,7 +106,8 @@ app.MapGet("/admins/{id}", ([FromRoute] int id, IAdminService adminService) =>
     });
 }).RequireAuthorization().WithTags("Admins");
 
-app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService) => {
+app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService) =>
+{
     var validation = new ErrorsHandling
     {
         Messages = new List<string>()
@@ -114,18 +139,29 @@ app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService
 
 app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
 {
+    var adm = adminService.Login(loginDTO);
+
     if (adminService.Login(loginDTO) != null)
-        return Results.Ok("Logged");
+    {
+        string token = GenerateJwtToken(adm);
+        return Results.Ok(new AdmLogged
+        {
+            Email = adm.Email,
+            Profile = adm.Profile,
+            Token = token
+        });
+    }
     else
         return Results.Unauthorized();
-}).RequireAuthorization().WithTags("Admins");
+}).WithTags("Admins");
 #endregion
 
 #region Vehicles
 
 ErrorsHandling validateDTO(VehicleDTO vehicleDTO)
 {
-    var validation = new ErrorsHandling {
+    var validation = new ErrorsHandling
+    {
         Messages = new List<String>()
     };
 
