@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Minimal_Vehicle_API.Domain.DTOs;
 using Minimal_Vehicle_API.Domain.Entities;
 using Minimal_Vehicle_API.Domain.Enums;
@@ -28,7 +29,9 @@ builder.Services.AddAuthentication(option =>
     option.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false,
     };
 });
 
@@ -38,7 +41,34 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Autorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Add your JWT Token here",
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 builder.Services.AddDbContext<MySQLContext>(options =>
 {
@@ -51,7 +81,7 @@ var app = builder.Build();
 #endregion
 
 #region Home
-app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
+app.MapGet("/", () => Results.Json(new Home())).WithTags("Home").AllowAnonymous();
 #endregion
 
 #region Admins
@@ -153,7 +183,7 @@ app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminS
     }
     else
         return Results.Unauthorized();
-}).WithTags("Admins");
+}).AllowAnonymous().WithTags("Admins");
 #endregion
 
 #region Vehicles
