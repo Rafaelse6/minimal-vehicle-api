@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Minimal_Vehicle_API.Domain.DTOs;
 using Minimal_Vehicle_API.Domain.Entities;
 using Minimal_Vehicle_API.Domain.Enums;
@@ -7,12 +9,28 @@ using Minimal_Vehicle_API.Domain.Interfaces;
 using Minimal_Vehicle_API.Domain.ModelViews;
 using Minimal_Vehicle_API.Infrastructure.Db;
 using Minimal_Vehicle_API.Services;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
+using System.Text;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.   
+var key = builder.Configuration.GetSection("Jwt").ToString();
+if (string.IsNullOrEmpty(key)) key = "123456";
+
+builder.Services.AddAuthentication(option =>
+{
+    option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(option =>
+{
+    option.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+});
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
@@ -50,7 +68,7 @@ app.MapGet("/admins", ([FromQuery] int? page, IAdminService adminService) =>
     }
 
     return Results.Ok(adms);
-}).WithTags("Admins");
+}).RequireAuthorization().WithTags("Admins");
 
 app.MapGet("/admins/{id}", ([FromRoute] int id, IAdminService adminService) =>
 {
@@ -62,7 +80,7 @@ app.MapGet("/admins/{id}", ([FromRoute] int id, IAdminService adminService) =>
         Email = adm.Email,
         Profile = adm.Profile
     });
-}).WithTags("Admins");
+}).RequireAuthorization().WithTags("Admins");
 
 app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService) => {
     var validation = new ErrorsHandling
@@ -92,7 +110,7 @@ app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService
         Profile = admin.Profile
     });
 
-}).WithTags("Admins");
+}).RequireAuthorization().WithTags("Admins");
 
 app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
 {
@@ -100,7 +118,7 @@ app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminS
         return Results.Ok("Logged");
     else
         return Results.Unauthorized();
-}).WithTags("Admins");
+}).RequireAuthorization().WithTags("Admins");
 #endregion
 
 #region Vehicles
@@ -128,7 +146,7 @@ app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService vehicleService) 
     var vehicles = vehicleService.GetVehicles(page);
 
     return Results.Ok(vehicles);
-}).WithTags("Vehicles");
+}).RequireAuthorization().WithTags("Vehicles");
 
 
 app.MapGet("/vehicles/{id}", ([FromRoute] int? id, IVehicleService vehicleService) =>
@@ -136,7 +154,7 @@ app.MapGet("/vehicles/{id}", ([FromRoute] int? id, IVehicleService vehicleServic
     var vehicle = vehicleService.FindById(id);
     if (vehicle == null) return Results.NotFound();
     return Results.Ok(vehicle);
-}).WithTags("Vehicles");
+}).RequireAuthorization().WithTags("Vehicles");
 
 app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
@@ -154,7 +172,7 @@ app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehi
     vehicleService.Add(vehicle);
     return Results.Created($"/vehicle/{vehicle.Id}", vehicle);
 
-}).WithTags("Vehicles");
+}).RequireAuthorization().WithTags("Vehicles");
 
 app.MapPut("/vehicles/{id}", ([FromRoute] int id, VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
@@ -173,7 +191,7 @@ app.MapPut("/vehicles/{id}", ([FromRoute] int id, VehicleDTO vehicleDTO, IVehicl
     vehicleService.Update(vehicle);
 
     return Results.Ok(vehicle);
-}).WithTags("Vehicles");
+}).RequireAuthorization().WithTags("Vehicles");
 
 app.MapDelete("/vehicles/{id}", ([FromRoute] int id, IVehicleService vehicleService) =>
 {
@@ -184,12 +202,16 @@ app.MapDelete("/vehicles/{id}", ([FromRoute] int id, IVehicleService vehicleServ
     vehicleService.Delete(vehicle);
 
     return Results.NoContent();
-}).WithTags("Vehicles");
+}).RequireAuthorization().WithTags("Vehicles");
 #endregion
 
 #region App
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 #endregion
 
 app.Run();
