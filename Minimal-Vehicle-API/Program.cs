@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -95,7 +96,8 @@ string GenerateJwtToken(Admin admin)
     var claims = new List<Claim>()
     {
         new Claim("Email", admin.Email),
-        new Claim("Profile", admin.Profile)
+        new Claim("Profile", admin.Profile),
+        new Claim(ClaimTypes.Role, admin.Profile)
     };
 
     var token = new JwtSecurityToken(
@@ -122,7 +124,10 @@ app.MapGet("/admins", ([FromQuery] int? page, IAdminService adminService) =>
     }
 
     return Results.Ok(adms);
-}).RequireAuthorization().WithTags("Admins");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+    .WithTags("Admins");
 
 app.MapGet("/admins/{id}", ([FromRoute] int id, IAdminService adminService) =>
 {
@@ -134,7 +139,10 @@ app.MapGet("/admins/{id}", ([FromRoute] int id, IAdminService adminService) =>
         Email = adm.Email,
         Profile = adm.Profile
     });
-}).RequireAuthorization().WithTags("Admins");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+    .WithTags("Admins");
 
 app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService) =>
 {
@@ -165,7 +173,10 @@ app.MapPost("/admins", ([FromBody] AdminDTO adminDTO, IAdminService adminService
         Profile = admin.Profile
     });
 
-}).RequireAuthorization().WithTags("Admins");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+    .WithTags("Admins");
 
 app.MapPost("/admins/login", ([FromBody] LoginDTO loginDTO, IAdminService adminService) =>
 {
@@ -212,7 +223,10 @@ app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService vehicleService) 
     var vehicles = vehicleService.GetVehicles(page);
 
     return Results.Ok(vehicles);
-}).RequireAuthorization().WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" })
+    .WithTags("Vehicles");
 
 
 app.MapGet("/vehicles/{id}", ([FromRoute] int? id, IVehicleService vehicleService) =>
@@ -220,7 +234,10 @@ app.MapGet("/vehicles/{id}", ([FromRoute] int? id, IVehicleService vehicleServic
     var vehicle = vehicleService.FindById(id);
     if (vehicle == null) return Results.NotFound();
     return Results.Ok(vehicle);
-}).RequireAuthorization().WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" })
+    .WithTags("Vehicles");
 
 app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
@@ -238,7 +255,10 @@ app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDTO, IVehicleService vehi
     vehicleService.Add(vehicle);
     return Results.Created($"/vehicle/{vehicle.Id}", vehicle);
 
-}).RequireAuthorization().WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" })
+    .WithTags("Vehicles");
 
 app.MapPut("/vehicles/{id}", ([FromRoute] int id, VehicleDTO vehicleDTO, IVehicleService vehicleService) =>
 {
@@ -257,7 +277,10 @@ app.MapPut("/vehicles/{id}", ([FromRoute] int id, VehicleDTO vehicleDTO, IVehicl
     vehicleService.Update(vehicle);
 
     return Results.Ok(vehicle);
-}).RequireAuthorization().WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+    .WithTags("Vehicles");
 
 app.MapDelete("/vehicles/{id}", ([FromRoute] int id, IVehicleService vehicleService) =>
 {
@@ -268,7 +291,10 @@ app.MapDelete("/vehicles/{id}", ([FromRoute] int id, IVehicleService vehicleServ
     vehicleService.Delete(vehicle);
 
     return Results.NoContent();
-}).RequireAuthorization().WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+    .WithTags("Vehicles");
 #endregion
 
 #region App
