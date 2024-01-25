@@ -17,7 +17,7 @@ namespace Test.Domain
             vehicle.Brand = "Ford";
             vehicle.Year = 2024;
 
-            // Arrange
+            // Assert
             Assert.AreEqual(vehicle.Id, 1);
             Assert.AreEqual(vehicle.Name, "Test");
             Assert.AreEqual(vehicle.Brand, "Ford");

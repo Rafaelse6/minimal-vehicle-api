@@ -9,7 +9,7 @@ namespace Test.Domain
         [TestMethod]
         public void GetSetPropertiesTest()
         {
-            //Arrangee
+            //Arrange
             var adm = new Admin();
 
             //Act
