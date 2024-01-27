@@ -1,6 +1,6 @@
 ﻿using Minimal_Vehicle_API.Domain.Entities;
 
-namespace Test.Domain
+namespace Test.Domain.Entities
 {
     [TestClass]
     public class VehicleTest
