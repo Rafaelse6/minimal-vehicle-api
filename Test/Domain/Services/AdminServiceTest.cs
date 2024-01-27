@@ -27,18 +27,41 @@ namespace Test.Domain.Services
         }
 
         [TestMethod]
+        public void FindByIdTest()
+        {
+            // Arrange
+            var context = CreateTestContext();
+            context.Database.ExecuteSqlRaw("TRUNCATE TABLE admins");
+
+            var adm = new Admin();
+            adm.Email = "test@test.com";
+            adm.Password = "password";
+            adm.Profile = "Adm";
+
+            var adminService = new AdminService(context);
+
+            //Act
+            adminService.Add(adm);
+            var foundAdm = adminService.FindById(adm.Id);
+
+            // Assert
+
+            Assert.AreEqual(1, foundAdm?.Id);
+        }
+
+        [TestMethod]
         public void AddAdminTest()
         {
             // Arrange
             var context = CreateTestContext();
             var adminService = new AdminService(context);
             context.Database.ExecuteSqlRaw("TRUNCATE TABLE admins");
-            
+
             var adm = new Admin();
             adm.Email = "test@test.com";
             adm.Password = "password";
             adm.Profile = "Adm";
-          
+
 
             // Act
             adminService.Add(adm);
