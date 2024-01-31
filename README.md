@@ -8,6 +8,7 @@
   <tr>
     <td>C#</td>
     <td>.NET 8</td>
+    <td>MSTest</td>
     <td>MySQL</td>
     <td>Entity Framework</td>
     <td>JWT</td>
